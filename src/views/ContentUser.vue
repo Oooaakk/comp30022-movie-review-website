@@ -5,10 +5,32 @@
         <el-header class="header">
          
       <div v-if="routeid===''|| routeid===null">
-       <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
+        <el-popover
+          placement="top-start"
+          title="Notice"
+          :width="200"
+          trigger="hover"
+          content="after login you can post review, like review, see your own past reviews and much more!"
+        >
+          <template #reference>
+            <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
+          </template>
+        </el-popover>
       </div>
       <div v-else>
         <AvatarIcon :routeID="routeid"/>
+        <div class="personalnfo">
+        <div class="usernamer"> <div>
+          
+          {{this.usernamerender}}  age:{{this.agerender}}</div>
+          <div v-if="this.genederrender==='MALE'">
+          <img class="maleimg" src="../assets/3233508.png"/></div>
+        <div v-else-if="this.genederrender==='FEMALE'">
+          <img class="femaleimg" src="../assets/3233515.png"/>
+        </div></div>
+
+  
+      </div>
       </div>
         </el-header>
         <el-main class="main">
@@ -18,7 +40,9 @@
           <div><el-image class="image" :src="this.$route.query.poster"></el-image></div>
           <div class="imdb">imdb rating:{{this.$route.query.rating}}</div>
           <div>{{this.$route.query.plot}}</div>
-       
+          <div>our rating:<el-rate allow-half disabled v-model="avgrating">
+                        {{this.avgrating}}</el-rate></div>
+          
           </el-card>
           <div v-if="this.getrating.length===0">
              <span class="noreview">No review yet, share you thoughts!</span>
@@ -26,20 +50,35 @@
           <div v-else>
             <el-space direction="vertical" class="reviewcard">
               <el-card v-for="(item,index) in getcontent" :key="index" style="width: 830px">
-
-                    <!-- <el-collapse v-model="activeNames" >
-                      <el-collapse-item title="see comments" name="1">
-                        <div class="content">
-                          {{getcontent[index].value}}
-                        </div>
-                      </el-collapse-item>
-                    </el-collapse> -->
-                    <div class="content">
-                          {{getcontent[index].value}}
+                    <div class="nameandage">
+                      <el-avatar :src="this.getavatar1[index]"></el-avatar>
+                      {{this.usernamerenderlist[index]}}  age:{{this.agerenderlist[index]}}
+                      
                     </div>
                     <el-rate allow-half disabled v-model="getrating[index].value">
                         rating:{{getrating[index].value}}</el-rate>
-                    <span class="date">{{getdate[index].value}}</span>
+                    <el-divider/>
+                    <div class="content">
+                          {{getcontent[index].value}}
+                    </div>
+                    
+                    <div class="date">edited on:{{getdate[index].value}}</div>
+                    
+                    
+                    <div v-if="routeid===''|| routeid===null">
+                      <img class="beforelike" src="../assets/like2.png">{{this.getliketotal[index]}}
+                      </div>
+                      <div v-else>
+                        <div v-if="this.getlikestatus[index]==='UNKNOWN'">
+                          <img class="beforelike" @click="changetolike(getreviewid[index])" src="../assets/like2.png"/>
+                          {{this.getliketotal[index]}}
+                        </div>
+                        <div v-else-if="this.getlikestatus[index]==='LIKE'">
+                          <img class="beforelike" @click="changetolike(getreviewid[index])"  src="../assets/like1.png"/>
+                          {{this.getliketotal[index]}}
+                        </div>
+              
+                      </div>            
       
               </el-card>
             </el-space>
@@ -114,6 +153,7 @@
       };
       return{
         activeNames: ['1'],
+        avgrating:0,
         // components: {
         //       HubIcon,
         //       AvatarIcon,
@@ -129,27 +169,119 @@
         posterlink:"",
         imdbrating:"",
         movietitle:"",
+        usernamerender:"",
+        agerender:"",
+        genederrender:"",
         dialogVisible:false,
         routeid:JSON.parse(localStorage.getItem('userid')),
         form: {
            movieId:this.$route.params.userID,
            review: "",
            rating:0,
+           movieName:this.$route.query.title,
+           poster:this.$route.query.poster
         
         },
         getcontent:[],
         getrating:[],
-        getdate:[]
+        getdate:[],
+        getuserId:[],
+        usernamerenderlist:[],
+        agerenderlist:[],
+        genederrenderlist:[],
+        getreviewid:[],
+        getliketotal:[],
+        getlikestatus:[],
+        getavatar1:[],
+        imageUrl:''
       }
     },
-    mounted(){
+    created(){
       this.GetAllreviews();
     },
+    mounted(){
+      
+      this.GetAvgrating();
+      this.getuserinfo();
+    },
     methods:{
-      // handleClose(done) {
-      //   this.$confirm('Are you sure to close this dialog?')
-      //     .then()
-      // },
+      changetolike(index){
+        request.post("/post/"+index+"/like").then(res=>{
+          if (res.status===200){
+
+             this.$router.go(0)
+          }else{
+            this.$message({
+              type: "error",
+              message: "fail to like the review!"
+             })
+          }
+        })
+      },
+      getalllike(){
+        for (let i=0;i<this.getuserId.length;i++){
+            request.get("/post/"+this.getreviewid[i]+"/like").then(res=>{
+              this.getliketotal[i]=res.data.body.count
+              this.getlikestatus[i]=res.data.body.status
+            
+            })
+        }
+      },
+      getuserinfo(){
+              request.get("/user/info/userId="+this.routeid).then(res=>{
+              if (res.status===200){
+                  this.usernamerender=res.data.body.username
+                  this.agerender=res.data.body.age,
+                  this.genederrender=res.data.body.gender
+              }
+              })
+              
+              console.log(this.usernamerenderlist)
+              console.log(this.getuserId)
+      },
+      geteveryuserinfo(){
+        for (let i=0;i<this.getuserId.length;i++){
+                request.get("/user/info/userId="+this.getuserId[i]).then(res=>{
+                this.usernamerenderlist[i]=res.data.body.username
+                this.agerenderlist[i]=res.data.body.age
+                this.genederrenderlist[i]==res.data.body.gender
+                
+                })
+              }
+      },
+      GetAvgrating(){
+        request.get("/post/getAvgRatingByName?movieId="+ this.$route.params.userID).then(res=>{
+          if(res.status===200) {
+            console.log(this.avgrating)
+
+           this.avgrating=res.data[0].avgRating
+           
+          }else{
+            this.$message({
+              type: "error",
+              message: "fail to get due to unexpected reason"
+             })
+          }
+          
+        })
+        
+      },
+      getavatar(){
+        for (let i=0;i<this.getuserId.length;i++){
+  
+          request.get("/photo/userId="+this.getuserId[i], {responseType: "blob"}).then(res=>{
+            if (res.status===200){
+              const fileReader = new FileReader()
+                  fileReader.readAsDataURL(res.data)
+                  fileReader.onload = e => {
+                    this.getavatar1[i]=e.target.result
+              }
+      
+            }
+
+          })
+        }
+      },
       GetAllreviews(){
          request.get("/post/?movieId="+this.$route.params.userID).then(res=>{
            if(res.status===200) {
@@ -167,8 +299,20 @@
                   value:res.data[i].lastModifiedDate.slice(0,10),
                   label:res.data[i].lastModifiedDate.slice(0,10)
                 })
+                this.getreviewid.push(
+                  res.data[i].id
+          
+                )
+                this.getuserId.push(
+                     res.data[i].userId,
+
+                )
               }
             }
+            this.geteveryuserinfo();
+            this.getalllike();
+            this.getavatar()
+            console.log(this.getlikestatus)
             
            }else{
             this.$message({
@@ -192,6 +336,7 @@
                         type: "success",
                         message: "successfully post the movie"
                       })
+                      this.$router.go(0)
                     } else {
                       this.$message({
                         type: "error",
@@ -242,6 +387,11 @@
 .header{
   background-color: black;
 }
+.beforelike{
+  width:3%;
+  height:3%;
+  cursor:pointer
+}
 .LRbutton{
   position:relative;
   left:560px;
@@ -291,12 +441,44 @@ height: 550px;
 }
 .date{
   position:relative;
-  left:340px;
-  bottom:-15px
+  left:320px;
+  bottom:-30px
 }
 .content{
   word-break: break-all;
   word-wrap: break-word;
   overflow:hidden;
 }
+.personalnfo{
+    color:orange
+  }
+  .maleimg{
+    position:relative;
+    left:-90px;
+    top:-20px;
+    width:10%;
+    height:10%;
+
+  }
+  .femaleimg{
+    position:relative;
+    left:-90px;
+    top:-20px;
+    width:10%;
+    height:10%;
+  }
+  .beforelike :hover{
+  box-shadow: 1px 1px 1px black;
+}
+  .usernamer{
+    margin-left:1000px;
+    padding:1px;
+    margin-top:10px;
+  }
+  /* .nameandage{
+    
+    text-align:left;
+    margin-left:50px;
+    margin-bottom: 20px;
+  } */
 </style>

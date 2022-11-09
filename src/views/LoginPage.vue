@@ -85,6 +85,7 @@ export default {
                       console.log("success");
                       localStorage.setItem("user", JSON.stringify(res.data.body.access_token))  
                       localStorage.setItem("userid", JSON.stringify(res.data.body.id))  
+                      localStorage.setItem("refreshuser", JSON.stringify(res.data.body.refresh_token))
    
                       this.$router.push('/moviehub/mainpageuser');
                       

@@ -29,15 +29,6 @@ const routes = [
     },
     component: () => import('@/views/DashBoard.vue'),
   },
-  {
-    path: '/Moviehub/dashboard/edit/:userID',
-    name: 'MovieDashbordedit',
-    meta: {
-      index: true,
-      title: '编辑',
-    },
-    component: () => import('@/views/EditPage.vue'),
-  },
 
   {
     path: '/Moviehub/registerpage',
@@ -84,7 +75,7 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
   if (
-    to.path === '/moviehub/loginpage' ||
+    to.name === 'login' ||
     to.name === 'Register' ||
     to.name === 'forgetpassword' ||
     to.name === 'MoviemainPage2' ||

@@ -29,11 +29,11 @@
   </el-popconfirm>
   
     <template #reference>
-      <div class="avatar" >
+      <div class="avatar1" >
         <el-avatar 
-        src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
-        @click="$router.push('/moviehub/dashboard/'+props.routeID)"
-          /><!--头像-->
+        
+        @click="$router.push('/moviehub/dashboard/'+rID)"
+          ><!--头像--><img :src=this.imageUrl /></el-avatar>
     </div>
     </template>
   </el-popover>
@@ -45,7 +45,9 @@
     width="30%"
   >
   <el-form class="allform"
-        ref="ruleFormRef"
+        :model="ruleForm"
+  
+        ref="ruleForm"
         :rules="rules"
         status-icon
         >
@@ -75,7 +77,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="dialogVisible = false;handleClose()" 
+        <el-button type="primary" @click="dialogVisible = false;handleClose('ruleForm')" 
           >Confirm</el-button
         >
       </span>
@@ -126,18 +128,18 @@
  
   >
   <el-form-item label="Add avatar:" class="labelcolor">
-        <el-upload
+    <el-upload
+        ref="doctypeCrfile"
     v-model:file-list="fileList"
     class="upload-demo"
-    action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-    multiple
+    action="https://moivehub-itproject-team004.herokuapp.com/photo"
     :on-preview="handlePreview"
-    :on-remove="handleRemove"
     :before-remove="beforeRemove"
     :limit="1"
+    name="image"
     :on-exceed="handleExceed"
     :auto-upload="false"
-    
+    :headers="this.h"
   >
     <el-button type="primary">Click to upload</el-button>
     <template #tip>
@@ -165,7 +167,7 @@ import { SwitchButton } from '@element-plus/icons-vue'
 import { Setting } from '@element-plus/icons-vue'
 import { Lock } from '@element-plus/icons-vue'
 import { Avatar } from '@element-plus/icons-vue'
-
+import {axios} from 'axios';
 import request from '@/utils/RequestFile.js'
 import { useRouter } from 'vue-router';
 
@@ -201,13 +203,20 @@ export default{
       }
     }
     return{
+      h:{Authorization:'Bearer ' + JSON.parse(localStorage.getItem("user"))},
+      imageUrl:'',
+      file:'',
       fileList: [],
       value:'',
       age:'',
       input:'',
+      usernamerender:'',
+      agerender:'',
+      genederrender:'',
       dialogVisible:false,
       dialogVisibleSetting :false,
       dialogVisibleAvatar:false,
+      rID:JSON.parse(localStorage.getItem('userid')),
       ruleForm :{
           oripass:"",
           checkPass: "",
@@ -216,12 +225,12 @@ export default{
       },
       options:[
         {
-          value: '0',
-          label: 'Male',
+          value: 'male',
+          label: 'male',
         },
         {
-          value: '1',
-          label: 'Female',
+          value: 'female',
+          label: 'female',
         },
       
       ],
@@ -235,15 +244,49 @@ export default{
      
 
    },
+   mounted(){
+    if (localStorage.getItem("userid")!==null && localStorage.getItem("userid")!==undefined){
+     this.getuserinfo()
+     
+     this.getavatar()
+    }
+   },
    methods: {
-      handleRemove(file, fileList) {
-        console.log(file, fileList);
+     getuserinfo(){
+         request.get("/user/info/userId="+this.rID).then(res=>{
+          if (res.status===200){
+             this.usernamerender=res.data.body.username
+             this.agerender=res.data.body.age,
+             this.genederrender=res.data.body.gender
+          }
+         })
+     },
+     getavatar(){
+        request.get("/photo/userId="+this.rID, {responseType: "blob"}).then(res=>{
+          if (res.status===200){
+            const fileReader = new FileReader()
+                fileReader.readAsDataURL(res.data)
+                fileReader.onload = e => {
+                  this.imageUrl = e.target.result
+            }
+          }
+        })
+     },
+     arrayBufferToBase64 (buffer) {
+        var binary = ''
+        var bytes = new Uint8Array(buffer)
+        var len = bytes.byteLength
+        for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i])
+        }
+        return window.btoa(binary)
       },
       handlePreview(file) {
         console.log(file);
       },
       handleExceed(files, fileList) {
-        this.$message.warning(`The limit is 1, you selected ${files.length} files this time, add up to ${files.length + fileList.length} totally`);
+        this.$message.warning(`The limit is 1, you selected ${files.length}
+         files this time, add up to ${files.length + fileList.length} totally`);
       },
       beforeRemove(file, fileList) {
         return this.$confirm(`Cancel the transfert of ${ file.name } ?`);
@@ -252,10 +295,10 @@ export default{
         window.localStorage.clear();
         useRouter().push('/moviehub/loginpage');
       },
-      handleClose(){
-        this.$refs['ruleForm'].validate((valid)=> {
-          if (valid){
-            request.post('/user/changePassword',this.routeID,this.ruleForm.oripass,this.ruleForm.checkPass).then((res)=>{
+      handleClose(formName){
+        this.$refs[formName].validate((valid)=> {
+          if (valid && this.confirmPass===this.checkPass){
+            request.post('/user/changePass',{oldPass:this.ruleForm.oripass,newPass:this.ruleForm.checkPass}).then((res)=>{
               if (res.status===200){
                 this.$message({
                     message: "change password successfully",
@@ -268,17 +311,24 @@ export default{
                 });
               }
             })
+          }else{
+            this.dialogVisible=true;
+            this.$message({
+                    message: "fill the form first! ",
+                    type: "error",
+             });
           }
         })
       },
       handleClose2(){
          if (this.input!==''&& this.value!==""&&this.age!==""){
-            request.post('/user/changeSettings',this.input,this.value,this.age).then((res)=>{
+            request.post('/user/changeSettings',{age:this.age,gender:this.value,username:this.input}).then((res)=>{
                   if (res.status===200){
                     this.$message({
                         message: "change settings successfully!",
                         type: "success",
                     });
+                    this.$router.go(0)
                   }else{
                     this.$message({
                         message: "fail to change settings!",
@@ -297,20 +347,8 @@ export default{
       }
       ,
       handleClose3(){
-
-        request.post('/photo',this.fileList).then((res)=>{
-          if (res.status===200){
-            this.$message({
-                message: "change avatar successfully",
-                type: "success",
-            });
-          }else{
-            this.$message({
-                message: "fail to change avatar",
-                type: "error",
-            });
-          }
-        })
+         this.$refs.doctypeCrfile.submit();
+         
       }
     },
     props:{
@@ -319,15 +357,15 @@ export default{
     components:{  SwitchButton ,Setting,Lock,Avatar}
 }
 
-//const routeiD=ref(JSON.parse(localStorage.getItem('userid')))
 </script>
 <style>
-  .avatar{
+
+  .avatar1{
   position:fixed;
   top:10px;
   left:1210px
 }
-.avatar:hover{
+.avatar1:hover{
   cursor:pointer;
 }
 .setting{
