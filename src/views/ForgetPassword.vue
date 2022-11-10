@@ -169,11 +169,14 @@ export default {
                         .then((res) => {
                         // console.log(res)
                         if (res.status === 200) {
-                          this.$message({
+                            console.log("nothing");
+                        }
+                    }).catch((err) => {
+                      this.$message({
                                 message: "email is sent",
                                 type: "success",
                             });
-                            
+                            console.log(err);
                             this.isDisabled = true;
                             let interval = setInterval(() => {
                                 this.btnMsg = "" + this.time + "seconds";
@@ -185,13 +188,6 @@ export default {
                                     clearInterval(interval);
                                 }
                        }, 1000);
-                        }
-                    }).catch((err) => {
-                      console.log(err)
-                      this.$message({
-                      message: "incorrect password or email!",
-                      type: "error",
-                     })
                     });
                 }else{
                   this.$message({

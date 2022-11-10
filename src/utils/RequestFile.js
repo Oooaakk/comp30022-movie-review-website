@@ -1,26 +1,23 @@
 import axios from 'axios'
 import router from "@/router"
+
 const request = axios.create({
   baseURL: "https://moivehub-itproject-team004.herokuapp.com",
   timeout: 100000
 })
 
-const whiteUrls = ["/user/login", "/user/register", "/user/forgotPassword", "/user/forgotPassword/email",
-  "/user/register/email"]
-//const whiteUrls = ["/post", "/photo", "/post/:id*"]
+//const whiteUrls = ["/user/login", '/user/register']
+const whiteUrls = ["/post"]
 request.interceptors.request.use(config => {
   config.headers['Content-Type'] = 'application/json;charset=utf-8'
 
   let userJson = localStorage.getItem("user")
-  let r = JSON.parse(localStorage.getItem("refreshuser"))
-
-
-  if (!whiteUrls.includes(config.url)) {
+  if (whiteUrls.includes(config.url)) {
     if (!userJson) {
-      // router.push("/moviehub/loginpage")
+      router.push("/moviehub/loginpage")
     } else {
-
-      config.headers['Authorization'] = 'Bearer ' + JSON.parse(userJson)
+      let user = JSON.parse(userJson)
+      config.headers['Authorization'] = 'Bearer ' + user
     }
   }
   return config
@@ -28,26 +25,34 @@ request.interceptors.request.use(config => {
   return Promise.reject(error)
 })
 
+// response 拦截器
+// 可以在接口响应后统一处理结果
 request.interceptors.response.use(
   response => {
+    //let res = response.data
+    // // file
+    // if (response.config.responseType === 'blob') {
+    //   return res
+    // }
+    // 兼容服务端返回的字符串数据
+    // if (typeof res === 'string') {
+    //   res = res ? JSON.parse(res) : res
+    // }
+    // 验证token
     if (response.status === 401) {
-      console.log(response.status)
-      alert("token expired,please relogin!")
+      this.$message({
+        message: "token expired,please relogin!",
+        type: "error",
+      })
       router.push("/moviehub/loginpage")
     }
     return response
   },
-  async function (error) {
-    const originalRequest = error.config
+  error => {
     console.log('err' + error) // for debug
-    console.log(error.response.status)
-    if (error.response.status === 0) {
-
-      alert("token expired,please relogin!")
-      router.push("/moviehub/loginpage")
-    }
     return Promise.reject(error)
   }
 )
+
 
 export default request

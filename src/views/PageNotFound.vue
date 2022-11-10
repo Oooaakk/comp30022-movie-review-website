@@ -1,5 +1,5 @@
 <template style="color:#F00" class="notfound">
-  <div>404 NOT FOUND!!!</div>
+  404 NOT FOUND!!!
 </template>
 <!--5秒后跳转原来页面-->
 <script>

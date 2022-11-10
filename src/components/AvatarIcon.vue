@@ -5,15 +5,6 @@
     content=""
     
   >
-  <div class="personalnfo"> 
-    <div>{{this.usernamerender}}  age:{{this.agerender}}
-      <div  v-if="this.genederrender==='MALE'">
-      <img class="maleimg" src="../assets/3233508.png"/></div>
-    <div v-else-if="this.genederrender==='FEMALE'">
-      <img class="femaleimg" src="../assets/3233515.png"/>
-    </div>
-    </div>
-  </div>
   <el-button @click="dialogVisible = true" class="cpass">
       <el-icon class="setting"><Lock /></el-icon>Change password</el-button>
 
@@ -38,11 +29,11 @@
   </el-popconfirm>
   
     <template #reference>
-      <div class="avatar1" >
+      <div class="avatar" >
         <el-avatar 
-        
-        @click="$router.push('/moviehub/dashboard/'+rID)"
-          ><!--头像--><img :src=this.imageUrl /></el-avatar>
+        src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+        @click="$router.push('/moviehub/dashboard/'+props.routeID)"
+          /><!--头像-->
     </div>
     </template>
   </el-popover>
@@ -54,9 +45,7 @@
     width="30%"
   >
   <el-form class="allform"
-        :model="ruleForm"
-  
-        ref="ruleForm"
+        ref="ruleFormRef"
         :rules="rules"
         status-icon
         >
@@ -64,7 +53,7 @@
         <el-form-item class = "languagecolour1" label="Original Password" prop="oripass">
       <el-input
         class = "inputform"
-        v-model="ruleForm.oripass"
+        v-model="ruleForm.checkPass"
         type="password"
         autocomplete="off"
       />
@@ -86,7 +75,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="dialogVisible = false;handleClose('ruleForm')" 
+        <el-button type="primary" @click="dialogVisible = false;handleClose(ruleFormRef)" 
           >Confirm</el-button
         >
       </span>
@@ -123,7 +112,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="dialogVisibleSetting  = false">Cancel</el-button>
-        <el-button type="primary" @click="dialogVisibleSetting  = false;handleClose2()"
+        <el-button type="primary" @click="dialogVisibleSetting  = false;handleClose2(ruleFormRef)"
           >Confirm</el-button
         >
       </span>
@@ -137,18 +126,18 @@
  
   >
   <el-form-item label="Add avatar:" class="labelcolor">
-    <el-upload
-        ref="doctypeCrfile"
+        <el-upload
     v-model:file-list="fileList"
     class="upload-demo"
-    action="https://moivehub-itproject-team004.herokuapp.com/photo"
+    action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+    multiple
     :on-preview="handlePreview"
+    :on-remove="handleRemove"
     :before-remove="beforeRemove"
     :limit="1"
-    name="image"
     :on-exceed="handleExceed"
     :auto-upload="false"
-    :headers="this.h"
+    
   >
     <el-button type="primary">Click to upload</el-button>
     <template #tip>
@@ -169,222 +158,151 @@
     </template>
   </el-dialog>
 </template>
-
-<script>
+<script lang="ts" setup>
 import { InfoFilled } from '@element-plus/icons-vue'
 import { SwitchButton } from '@element-plus/icons-vue'
 import { Setting } from '@element-plus/icons-vue'
 import { Lock } from '@element-plus/icons-vue'
 import { Avatar } from '@element-plus/icons-vue'
-import {axios} from 'axios';
-import request from '@/utils/RequestFile.js'
-import { useRouter } from 'vue-router';
-
-export default{
-  data(){
-    var validatePass1 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('Please input the password'))
-        }else if(value!=='' && ((this.ruleForm.oripass.length < 5 || this.ruleForm.oripass.length > 16))){
-          console.log("incorrect password form!!")
-          callback(new Error('Please input correct form of password'))
-        }else{
-          callback()
-        }
-    };
-    var validatePass2 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('Please input the password'))
-        }else if(value!=='' && ((this.ruleForm.checkPass.length < 5 || this.ruleForm.checkPass.length > 16))){
-          console.log("incorrect password form!!")
-          callback(new Error('Please input correct form of password'))
-        }else{
-          callback()
-        }
-    };
-    var validatePass3 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('Please input the password again'))
-      } else if (value !== this.ruleForm.checkPass) {
-        callback(new Error("Two inputs don't match!"))
-      } else {
-        callback()
-      }
-    }
-    return{
-      h:{Authorization:'Bearer ' + JSON.parse(localStorage.getItem("user"))},
-      imageUrl:'',
-      file:'',
-      fileList: [],
-      value:'',
-      age:'',
-      input:'',
-      usernamerender:'',
-      agerender:'',
-      genederrender:'',
-      dialogVisible:false,
-      dialogVisibleSetting :false,
-      dialogVisibleAvatar:false,
-      rID:JSON.parse(localStorage.getItem('userid')),
-      ruleForm :{
-          oripass:"",
-          checkPass: "",
-          confirmPass: "",
-
-      },
-      options:[
-        {
-          value: 'male',
-          label: 'male',
-        },
-        {
-          value: 'female',
-          label: 'female',
-        },
-      
-      ],
-      rules: {
-        oripass:[{ validator: validatePass1, trigger: 'blur' }],
-        checkPass: [{ validator: validatePass2, trigger: 'blur' }],
-        confirmPass: [{ validator: validatePass3, rigger: 'blur' }],
-        
-      },
-     };
-     
-
-   },
-   mounted(){
-    if (localStorage.getItem("userid")!==null && localStorage.getItem("userid")!==undefined){
-     this.getuserinfo()
-     
-     this.getavatar()
-    }
-   },
-   methods: {
-     getuserinfo(){
-         request.get("/user/info/userId="+this.rID).then(res=>{
-          if (res.status===200){
-             this.usernamerender=res.data.body.username
-             this.agerender=res.data.body.age,
-             this.genederrender=res.data.body.gender
-          }
-         })
-     },
-     getavatar(){
-        request.get("/photo/userId="+this.rID, {responseType: "blob"}).then(res=>{
-          if (res.status===200){
-            const fileReader = new FileReader()
-                fileReader.readAsDataURL(res.data)
-                fileReader.onload = e => {
-                  this.imageUrl = e.target.result
-            }
-          }
-        })
-     },
-     arrayBufferToBase64 (buffer) {
-        var binary = ''
-        var bytes = new Uint8Array(buffer)
-        var len = bytes.byteLength
-        for (var i = 0; i < len; i++) {
-          binary += String.fromCharCode(bytes[i])
-        }
-        return window.btoa(binary)
-      },
-      handlePreview(file) {
-        console.log(file);
-      },
-      handleExceed(files, fileList) {
-        this.$message.warning(`The limit is 1, you selected ${files.length}
-         files this time, add up to ${files.length + fileList.length} totally`);
-      },
-      beforeRemove(file, fileList) {
-        return this.$confirm(`Cancel the transfert of ${ file.name } ?`);
-      },
-      logout(){
-        window.localStorage.clear();
-        useRouter().push('/moviehub/loginpage');
-      },
-      handleClose(formName){
-        this.$refs[formName].validate((valid)=> {
-          if (valid && this.confirmPass===this.checkPass){
-            request.post('/user/changePass',{oldPass:this.ruleForm.oripass,newPass:this.ruleForm.checkPass}).then((res)=>{
-              if (res.status===200){
-                this.$message({
-                    message: "change password successfully",
-                    type: "success",
-                });
-              }else{
-                this.$message({
-                    message: "fail to change password ",
-                    type: "error",
-                });
-              }
-            })
-          }else{
-            this.dialogVisible=true;
-            this.$message({
-                    message: "fill the form first! ",
-                    type: "error",
-             });
-          }
-        })
-      },
-      handleClose2(){
-         if (this.input!==''&& this.value!==""&&this.age!==""){
-            request.post('/user/changeSettings',{age:this.age,gender:this.value,username:this.input}).then((res)=>{
-                  if (res.status===200){
-                    this.$message({
-                        message: "change settings successfully!",
-                        type: "success",
-                    });
-                    this.$router.go(0)
-                  }else{
-                    this.$message({
-                        message: "fail to change settings!",
-                        type: "error",
-                    });
-                  }
-            })
-          }
-          else{
-            this.dialogVisibleSetting  = true;
-            this.$message({
-                  message: "must fill the form before submit!",
-                  type: "error",
-            });
-          }
-      }
-      ,
-      handleClose3(){
-         this.$refs.doctypeCrfile.submit();
-         
-      }
-    },
-    props:{
-      routeID:String
-    },
-    components:{  SwitchButton ,Setting,Lock,Avatar}
+import { reactive,ref,defineProps  } from 'vue'
+import type { FormInstance } from 'element-plus'
+import request from '@/utils/RequestFile'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { UploadProps, UploadUserFile } from 'element-plus'
+import { useRouter } from 'vue-router'
+const input = ref('')
+const value = ref()
+const age = ref(1)
+//const routeiD=ref(JSON.parse(localStorage.getItem('userid')))
+const fileList = ref<UploadUserFile[]>([
+])
+const options = [
+  {
+    value: '0',
+    label: 'Male',
+  },
+  {
+    value: '1',
+    label: 'Female',
+  },
+  
+]
+const props = defineProps ({
+		routeID:String
+})
+const logout=()=>{
+  window.localStorage.clear();
+  useRouter().push('/moviehub/loginpage');
 }
-
-</script>
+const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
+  console.log(file, uploadFiles)
+}
+const handlePreview: UploadProps['onPreview'] = (uploadFile) => {
+  console.log(uploadFile)
+}
+const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
+  ElMessage.warning(
+    `The limit is 1, you selected ${files.length} files this time, add up to ${
+      files.length + uploadFiles.length
+    } totally`
+  )
+}
+const beforeRemove: UploadProps['beforeRemove'] = (uploadFile) => {
+  return ElMessageBox.confirm(
+    `Cancel the transfert of ${uploadFile.name} ?`
+  ).then(
+    () => true,
+    () => false
+  )
+}
+const ruleFormRef = ref<FormInstance>()
+  const validatePass1 = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('Please input the password'))
+  } else {
+    if (value!='' && ((ruleForm.checkPass.length < 8 || ruleForm.checkPass.length > 16))){
+      callback(new Error('Please input correct form of password'))
+    }
+    if (ruleForm.confirmPass !== '') {
+      if (!ruleFormRef.value) return
+      ruleFormRef.value.validateField('confirmPass', () => null)
+    }
+    callback()
+  }
+}
+const validatePass2 = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('Please input the password'))
+  } else {
+    if (value!='' && ((ruleForm.checkPass.length < 8 || ruleForm.checkPass.length > 16))){
+      callback(new Error('Please input correct form of password'))
+    }
+    if (ruleForm.confirmPass !== '') {
+      if (!ruleFormRef.value) return
+      ruleFormRef.value.validateField('confirmPass', () => null)
+    }
+    callback()
+  }
+}
+const validatePass3 = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('Please input the password again'))
+  } else if (value !== ruleForm.checkPass) {
+    callback(new Error("Two inputs don't match!"))
+  } else {
+    callback()
+  }
+}
+const rules = reactive({
+  oripass:[{ validator: validatePass1, trigger: 'blur' }],
+  checkPass: [{ validator: validatePass2, trigger: 'blur' }],
+  confirmPass: [{ validator: validatePass3, rigger: 'blur' }],
+  
+})
+const ruleForm = reactive({
+  oripass:'',
+  checkPass: '',
+  confirmPass: '',
+  
+})
+const dialogVisible = ref(false)
+const dialogVisibleSetting = ref(false)
+const dialogVisibleAvatar = ref(false)
+const handleClose = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.validate((valid) => {
+    if (valid) {
+      request.put
+    } else {
+      console.log('error submit!')
+      return false
+    }
+  })
+}
+const handleClose2 = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.validate((valid) => {
+    if (valid) {
+      request.put
+    } else {
+      console.log('error submit!')
+      return false
+    }
+  })
+}
+const handleClose3 = () => {
+  console.log('error submit!')
+}
+  </script>
 <style>
-
-  .avatar1{
-  position:absolute;
+  .avatar{
+  position:fixed;
   top:10px;
-  left:96%
+  left:1210px
 }
-.avatar1:hover{
+.avatar:hover{
   cursor:pointer;
-  -webkit-transform: translateY(-3px);
-  -ms-transform: translateY(-3px);
-  transform: translateY(-3px);
-  -webkit-box-shadow: 0 0 6px #999;
-  box-shadow: 0 0 6px #999;
-  -webkit-transition: all .5s ease-out;
-  transition: all .5s ease-out;
 }
-
 .setting{
     margin-top:10px
 }
@@ -407,25 +325,4 @@ export default{
 .logoutbutton{
   margin-top: 10px;
 }
-.personalnfo{
-    color:orange;
-    position:relative;
-    left:50px;
-
-  }
-
-  .maleimg{
-
-    width:16%;
-    height:16%;
-    position:relative;
-    left:22px;
-
-  }
-  .femaleimg{
-    width:16%;
-    height:16%;
-    position:relative;
-    left:22px;
-  }
 </style>
