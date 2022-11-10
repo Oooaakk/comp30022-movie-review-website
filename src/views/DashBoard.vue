@@ -254,7 +254,7 @@
     
     </script>
 
-<style>
+<style scoped>
  
 body {
   background-color: #222231;

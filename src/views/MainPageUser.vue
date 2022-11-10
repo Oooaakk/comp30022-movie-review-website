@@ -19,7 +19,7 @@
       
       <div v-if="routeuserID===''|| routeuserID===null">
         <el-popover
-          placement="top-start"
+          placement="bottom"
           title="Notice"
           :width="200"
           trigger="hover"

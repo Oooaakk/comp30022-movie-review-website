@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 const routes = [
-  { path: '/', redirect: '/Moviehub/loginpage' },
+  { path: '/', redirect: '/Moviehub/mainpageuser' },
   {
     path: '/Moviehub/loginpage',
     name: 'login',
