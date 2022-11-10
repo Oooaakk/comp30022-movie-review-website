@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public interface PhotoService {
 
-    public String addPhoto(String Filename, MultipartFile image,String userid) throws IOException;
+    public String addPhoto(String Filename, MultipartFile image) throws IOException;
 
     public Photo getPhoto(String id);
 

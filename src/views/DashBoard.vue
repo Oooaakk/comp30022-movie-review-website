@@ -4,7 +4,7 @@
   <div class="common-layout">
       <el-container>
         <el-header class="header" >
-          
+ 
           <AvatarIcon/>
         
         </el-header>
@@ -15,12 +15,42 @@
               style="width: 830px">
                 
                   <div class="card-header" >
-                    
+                    <div>
+                      <el-image class="dashboardimg" :src="this.getposter[index]"></el-image>
+                    </div>
+                    <div class="moviename">
+                      {{this.getmoviename[index]}}
+                    </div>
+                    <div class="reviewtext">Review</div>
                     <span class="content">{{getcontent[index].value}}</span>
                     <el-divider/>
-                    <span>rating:{{getrating[index].value}}</span>
-                    <el-icon class="editreviewbut" @click="dialogVisible =true"><Edit /></el-icon>
-                    <el-icon class="deletereviewbut"><Delete /></el-icon>
+                    <div>rating:<el-rate allow-half disabled v-model="getrating[index].value">
+                        {{getrating[index].value}}</el-rate></div>
+    
+                    <div v-if="this.getliketotal[index]==='0'">
+                      <img class="beforelike" src="../assets/like2.png"/>{{this.getliketotal[index]}}
+                    </div>
+                    <div v-else>
+                      <img class="beforelike" src="../assets/like1.png"/>{{this.getliketotal[index]}}
+                    </div>
+
+                    
+                    <el-icon class="editreviewbut"
+                        @click="dialogVisible =true;this.curreviewid=getreviewid[index].value"><Edit /></el-icon>
+
+                        <el-popconfirm
+                          confirm-button-text="Yes"
+                          cancel-button-text="No"
+                          :icon="InfoFilled"
+                          icon-color="#626AEF"
+                          title="Are you sure to delete this review?"
+                          @confirm="deletepost(getreviewid[index].value)"
+                        >
+                          <template #reference>
+                            <el-icon class="deletereviewbut"><Delete /></el-icon>
+                          </template>
+                        </el-popconfirm>
+                    
                   </div>
               </el-card>
             </el-space>
@@ -51,21 +81,18 @@
             />
           </el-form-item>
           <el-form-item class = "rating" label="Rating" prop="rating">
-            <el-select v-model="form.rating" placeholder="enter your rating">
-              <el-option
-                        v-for="item in rating_list"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value">
-                      </el-option>
-              </el-select>
+            <el-rate v-model="form.rating" :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+                    :max="5"
+                    allow-half
+                    show-text
+                    :texts="['very bad', 'bad', 'normal', 'nice', 'surprise']"></el-rate>
         </el-form-item>
       
         </el-form>
               <template #footer>
                 <span class="dialog-footer">
                   <el-button @click="dialogVisible = false">Cancel</el-button>
-                  <el-button type="primary" @click="dialogVisible = false"
+                  <el-button type="primary" @click="editreviews('form')"
                     >Confirm</el-button
                   >
                 </span>
@@ -92,26 +119,14 @@
           getcontent:[],
           getrating:[],
           dialogVisible :false,
-          rating_list: [{
-            value: '0',
-            label: '0'
-          }, {
-            value: '1',
-            label: '1'
-          }, {
-            value: '2',
-            label: '2'
-          }, {
-            value: '3',
-            label: '3'
-          }, {
-            value: '4',
-            label: '4'
-          }, {
-            value: '5',
-            label: '5'
-          }
-        ],
+          getreviewid:[],
+          curreviewid:'',
+          getposter:[],
+          getmoviename:[],
+          getliketotal:[],
+          usernamerender:"",
+            agerender:"",
+            genederrender:"",
         form: {
            review: "",
            rating:"",
@@ -122,16 +137,14 @@
                 { required: true, message: "review cannot be blank", trigger: "blur" },
                 { message: "review cannot be blank", trigger: "change" },
           ],
-          rating: [
-                { required: true, message: "rating cannot be blank", trigger: "blur" },
-                {  message: "rating cannot be blank", trigger: "change" },
-          ],
+
          },
         }
       },
       
       mounted(){
          this.getpastreviews()
+         this.getuserinfo()
       },
       methods:{
         getpastreviews(){
@@ -147,9 +160,19 @@
                   value:res.data[i].rating,
                   label:res.data[i].rating
                 })
+                this.getreviewid.push({
+                  value:res.data[i].id,
+                  label:res.data[i].id
+                })
+                this.getposter.push(res.data[i].poster,
+
+                )
+                this.getmoviename.push(res.data[i].movieName,
+                )
+
               }
             }
-            
+            this.getalllike();
            }else{
             this.$message({
               type: "error",
@@ -157,8 +180,74 @@
              })
             }
           })
+          
        
-      }
+        },
+        getalllike(){
+        for (let i=0;i<this.getcontent.length;i++){
+            request.get("/post/"+this.getreviewid[i].value+"/like").then(res=>{
+              this.getliketotal[i]=res.data.body.count
+            
+            })
+        }
+       },
+        getuserinfo(){
+              request.get("/user/info/userId="+this.$route.params.userID).then(res=>{
+              if (res.status===200){
+                  this.usernamerender=res.data.body.username
+                  this.agerender=res.data.body.age,
+                  this.genederrender=res.data.body.gender
+              }
+              })
+              console.log(this.genederrender)
+          },
+        editreviews(formName){
+          this.dialogVisible = false,
+          this.$refs[formName].validate((valid) => {
+            if (valid && this.form.rating!=="" && this.form.review!==""){
+              request.put("/post/"+this.curreviewid, {review:this.form.review, rating:this.form.rating}).then(res=>{
+              if(res.status===200) {
+                this.$message({
+                type: "success",
+                message: "successfully edited"
+                })
+                this.$router.go(0);
+              }else{
+                this.$message({
+                  type: "error",
+                  message: "fail to edit review due to unexpected reason"
+                })
+                }
+              })
+            }else{
+              this.$message({
+                  type: "error",
+                  message: "fill in the form first!"
+                  
+              })
+              this.dialogVisible = true
+            }
+          })
+        },
+        deletepost(id){
+          request.delete("/post/"+id).then(res=>{
+           if(res.status===200) {
+            this.$message({
+            type: "success",
+            message: "successfully deleted"
+             })
+             this.$router.go(0);
+            
+           }else{
+            this.$message({
+              type: "error",
+              message: "fail to edit review due to unexpected reason"
+             })
+            }
+          })
+
+        },
+       
       },
       components: { HubIcon,AvatarIcon,Edit,Delete}
     }
@@ -198,9 +287,40 @@ body {
   width:120%;
   cursor:pointer;
 }
+.editreviewbut :hover{
+  box-shadow: 1px 1px 1px grey;
+}
+.deletereviewbut :hover{
+  box-shadow: 1px 1px 1px grey;
+}
+
 .deletereviewbut{
   position:relative;
   left:350px;
   cursor:pointer
+}
+.dashboardimg{
+  width:20%;
+  height:20%
+}
+.moviename{
+  font-style: italic;
+  margin:20px
+}
+.reviewtext{
+  font-size:x-large;
+  margin-bottom:15px;
+  color:orange
+}
+
+  .genderposition{
+    left: 500px;
+    
+  }
+ 
+  .beforelike{
+  width:5%;
+  height:5%;
+
 }
 </style>

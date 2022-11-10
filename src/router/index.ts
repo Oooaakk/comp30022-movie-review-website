@@ -29,15 +29,6 @@ const routes = [
     },
     component: () => import('@/views/DashBoard.vue'),
   },
-  {
-    path: '/Moviehub/dashboard/edit/:userID',
-    name: 'MovieDashbordedit',
-    meta: {
-      index: true,
-      title: '编辑',
-    },
-    component: () => import('@/views/EditPage.vue'),
-  },
 
   {
     path: '/Moviehub/registerpage',
@@ -57,15 +48,6 @@ const routes = [
     },
     component: () => import('@/views/ForgetPassword.vue'),
   },
-  {
-    path: '/Moviehub/changepassword/:userID',
-    name: 'changepassword',
-    meta: {
-      title: '改变密码',
-      needLogin: true,
-    },
-    component: () => import('@/views/ChangePassword.vue'),
-  },
 
   {
     path: '/Moviehub/contentpageuser/:userID',
@@ -75,15 +57,6 @@ const routes = [
       title: '登录内容',
     },
     component: () => import('@/views/ContentUser.vue'),
-  },
-  {
-    path: '/Moviehub/dashboard/setting/:userID',
-    name: 'SettingPage',
-    meta: {
-      index: true,
-      title: '设置',
-    },
-    component: () => import('@/views/SettingPage.vue'),
   },
 
   {
@@ -102,7 +75,7 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
   if (
-    to.path === '/moviehub/loginpage' ||
+    to.name === 'login' ||
     to.name === 'Register' ||
     to.name === 'forgetpassword' ||
     to.name === 'MoviemainPage2' ||

@@ -4,10 +4,9 @@
     <el-container>
       <el-header class="header">
         <div class="seaerchthreegroup">
-          <!--<el-input class= "searchbar" placeholder="search your movie" v-model="inputText"></el-input>-->
-  
             <el-autocomplete 
-              placeholder="search your movie" 
+ 
+              placeholder="search your movie here!" 
               popper-class="my-autocomplete" 
               class="input-with-select" 
               v-model="keywords" 
@@ -15,25 +14,44 @@
               :trigger-on-focus="false" 
               @select="handleSelect">
             </el-autocomplete>
-  
-        <!-- <div>
-          <el-button type="primary" class="searchbut"  >Search</el-button>
-        </div>
-        <div>
-          <el-button class="newbutton" @click="reset()">Reset</el-button>
-        </div> -->
+
       </div>
-  
+      
       <div v-if="routeuserID===''|| routeuserID===null">
-       <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
+        <el-popover
+          placement="top-start"
+          title="Notice"
+          :width="200"
+          trigger="hover"
+          content="after login you can post review, like review, see your own past reviews, post your avatar and much more!"
+        >
+          <template #reference>
+            <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
+          </template>
+        </el-popover>
+       
       </div>
       <div v-else>
         <AvatarIcon :routeID="routeuserID"/>
+        
       </div>
+
   
       </el-header>
       
       <el-main class="main">
+        <div class="nowgroup">
+        <div class="nowplayingtext">Now playing</div>
+        <div class="nowplayingcarousel">
+        <el-carousel height="330px" indicator-position="none" >
+      <el-carousel-item v-for="(item,i) in nowimg" :key="i" >
+
+        <div ><el-image class="nowplayingimg" :src="nowimg[i].value"></el-image></div>
+      </el-carousel-item>
+    </el-carousel>
+  </div>
+  </div>
+    <el-divider/>
         <div class="recommend">Recommend movies</div>
         <div class="filteroptiongroup">
         <el-select v-model="value2" class="select" placeholder="sortBy">
@@ -56,10 +74,14 @@
     />
   </el-select>
   
-  <el-button @click="searchrelmovie()">recommended</el-button></div>
+  <el-button class= "recbutton" @click="searchrelmovie()">recommended</el-button>
+  <el-button @click="getTopmovies()">Top 250</el-button>
+  <el-button @click="getratedmovies()">Rated movies</el-button>
+</div>
+  
         <el-divider />
-        <!--movie card-->
 
+        <div v-if="this.ourrank===false">
         <el-space wrap>
           
             <el-card v-for="(item,i) in movietitle" :key="i" class="box-card" 
@@ -73,11 +95,31 @@
                   <span><el-image :src="movieposter[i].value"></el-image></span>
                   <el-divider/>
                   <span>imdb rating:{{movieofficialrating[i].value}}</span>
+                  <div>our rating:<el-rate allow-half disabled v-model="avgrating[i]">
+                        {{this.avgrating[i]}}</el-rate></div>
                 </div>
             </el-card>
           
         </el-space>
+      </div>
+      <div v-else>
+        <el-space wrap>
+          
+          <el-card v-for="(item,i) in ourranktitle" :key="i" class="box-card" 
+           style="width: 250px;margin-right:20px">
 
+              <div class="card-header">
+                <span>{{ourranktitle[i]}}</span>
+                <el-divider/>
+                <span><el-image :src="ourrankposter[i]"></el-image></span>
+                <el-divider/>
+                <div>our rating:<el-rate allow-half disabled v-model="avgratingrank[i]">
+                      {{this.avgratingrank[i]}}</el-rate></div>
+              </div>
+          </el-card>
+        
+      </el-space>
+      </div>
         <el-backtop :bottom="100">
           <div
             style="
@@ -106,7 +148,7 @@
   import HubIcon from '@/components/HubIcon.vue';
   import AvatarIcon from '@/components/AvatarIcon.vue';
   import request2 from "@/utils/Request2.js";
-  
+  import request from "@/utils/RequestFile.js"
   export default{
       data(){
           return{
@@ -199,19 +241,123 @@
             movielist : [],
             movieplot:[],
             inputText: "",
-            
             poster: "",
             rating: "",
             title: "",
-            routeuserID:JSON.parse(localStorage.getItem('userid'))
+            usernamerender:"",
+            agerender:"",
+            genederrender:"",
+            routeuserID:JSON.parse(localStorage.getItem('userid')),
+            avgrating:[],
+            nowimg:[],
+            ourrankid:[],
+            avgratingrank:[],
+            ourranktitle:[],
+            ourrankposter:[],
+            ourrank:false,
           }
         },
-        mounted(){
+        created(){
           this.getTopmovies()
         },
+        
+        mounted(){
+          this.Getnowplaying()
+          if (localStorage.getItem("userid")!==null && localStorage.getItem("userid")!==undefined){
+            this.getuserinfo()
+          }
+        },
         methods:{
+          
+          unique (arr) {
+           return Array.from(new Set(arr))
+          },
+          getratedmovies(){
+            this.clearall();
+            this.ourrank=true;
+         request.get("/post/?movieId="+this.$route.params.userID).then(res=>{
+           if(res.status===200) {
+            for (let i=0;i<res.data.length;i++){
+                this.ourrankid.push(
+                     res.data[i].movieId,
+                )
+                this.ourranktitle.push(
+                     res.data[i].movieName,
+                )
+                this.ourrankposter.push(
+                     res.data[i].poster,
+                )
+            }
+            this.ourrankid=this.unique(this.ourrankid)
+            this.ourranktitle=this.unique(this.ourranktitle)
+            for (let i=0;i<this.ourrankid.length;i++){
+              request.get("/post/getAvgRatingByName?movieId="+ this.ourrankid[i]).then(res=>{
+                if(res.status===200) {
+                  this.avgratingrank[i]=res.data[0].avgRating
+
+                }else{
+                  this.$message({
+                    type: "error",
+                    message: "fail to get due to unexpected reason"
+                  })
+                }
+              })
+              
+            }
+           }else{
+            this.$message({
+              type: "error",
+              message: "fail to get due to unexpected reason"
+             })
+            }
+          })
+       
+      },
+          Getnowplaying(){
+            request2.get("/?groups=now-playing-us").then(res=>{
+              if(res.status === 200){
+              for(let i =0; i<10; i++) {
+                this.nowimg.push({
+                  value:res.data.results[i].image,
+                  label:res.data.results[i].image
+                })
+              }
+            }else {
+              this.$message({
+                type: "error",
+                message: "unsucessfully render"
+          })
+        }
+            })
+          },
+          GetAvgrating(){
+            for (let i=0;i<this.movieid.length;i++){
+              request.get("/post/getAvgRatingByName?movieId="+ this.movieid[i].value).then(res=>{
+          if(res.status===200) {
+            this.avgrating[i]=(res.data)[0].avgRating
+           
+          }else{
+            this.$message({
+              type: "error",
+              message: "fail to get due to unexpected reason"
+             })
+          } })
+            }
+          },
+          getuserinfo(){
+              request.get("/user/info/userId="+this.routeuserID).then(res=>{
+              if (res.status===200){
+                  this.usernamerender=res.data.body.username
+                  this.agerender=res.data.body.age,
+                  this.genederrender=res.data.body.gender
+              }
+              })
+              
+              console.log(this.genederrender)
+          },
           searchrelmovie(){
             this.clearall();
+            this.ourrank=false
             console.log(this.movietitle);
             var outcome;
             if (this.value2!=='' && this.value3===''){
@@ -259,6 +405,9 @@
                       message: "unsucessfully search"
                 })
               }
+              
+              this.GetAvgrating()
+              console.log(this.avgrating)
             })
           
           
@@ -270,11 +419,10 @@
              this.moviegenre=[];
              this.movieofficialrating=[];
              this.movieposter=[];
+             this.avgrating=[];
           },
   
-  // 查询
           querySearchAsync (queryString, cb) {
-            // data 为可选列表数据
             let data_list = []
             
             if (queryString.length > 0) {
@@ -307,7 +455,7 @@
               cb(data_list)
             }
           },
-          // 选择下拉
+
           handleSelect (item) {
             console.log(item)
             for(let i = 0; i<this.movielist.length; i++){
@@ -333,10 +481,6 @@
           getInputValue(searchvalue) {
             console.log(searchvalue);
             
-            /*if(this.last !== searchvalue){
-              this.itemlist.length = 0;
-            }*/
-            
             request2.get("/?title=" + searchvalue).then(res => {
               if(res.status === 200){
                 this.itemlist.length = 0;
@@ -358,10 +502,11 @@
                 })
               }
             })
-            // 请求获取筛选列表
             
           },
           getTopmovies(){
+            this.clearall()
+            this.ourrank=false
             request2.get("/?groups=top_250").then(res=>{
                 if(res.status === 200){
               
@@ -392,6 +537,7 @@
                         label:res.data.results[i].genres
                       })
                     }
+                    this.GetAvgrating()
                   }else {
                     this.$message({
                       type: "error",
@@ -412,9 +558,13 @@
   background-color: black;
     
   }
+  .recbutton{
+    position:relative;
+    right:180px;
+  }
   .searchbar{
     margin-left: 100px;
-    width:20%;
+    width:30%;
     margin-top: 17px;
   }
   .searchbut{
@@ -425,6 +575,10 @@
   .LRbutton{
   position:relative;
   left:580px;
+  top:-35px
+  }
+  .seaerchthreegroup{
+    margin-top: 15px;
   }
   
   .search{
@@ -439,7 +593,7 @@
   .LRbutton{
   position:relative;
   left:560px;
-  top:-20px
+  top:-35px
   }
   .setting{
   margin-top:10px
@@ -477,13 +631,43 @@
   }
   .filteroptiongroup{
     position:relative;
-    left:70px;
+    left:150px;
   }
-  .seaerchthreegroup{
   
+ 
+  .nowplayingtext{
+    color:orange;
+    left:-360px;
     position:relative;
-    top:13px;
-    left:0px;
-  
+    font-size:25px;
+    margin-bottom: 15px;
+  }
+  .nowplayingimg{
+    width:300px;
+    height:330px
+  }
+  .nowplayingcarousel{
+    width:40%;
+    position:relative;
+    left:5%
+  }
+  .ourrankcard{
+    width:30%;
+    position:relative;
+    top:-320px;
+
+    left:500px
+  }
+  .ourranktext{
+    color:orange;
+    font-size:25px;
+    margin-bottom: 15px;
+    position:relative;
+    left:60px;
+    top:-40px
+  }
+  .nowgroup{
+    position:relative;
+    left:360px;
   }
   </style>

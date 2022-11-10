@@ -3,7 +3,6 @@ package com.example.moviehub.controller;
 
 
 import com.example.moviehub.collection.Photo;
-import com.example.moviehub.service.Impl.PhotoServiceImpl;
 import com.example.moviehub.service.PhotoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,30 +18,30 @@ import java.io.IOException;
 @RequestMapping("/photo")
 public class PhotoController {
     @Autowired
-    private PhotoServiceImpl photoServiceImpl;
+    private PhotoService photoService;
 
     @PostMapping
-    public String addPhoto(@RequestParam("image") MultipartFile image, @RequestParam String userid) throws IOException {
-        String id = photoServiceImpl.addPhoto(image.getOriginalFilename(),image,userid);
+    public String addPhoto(@RequestParam("image") MultipartFile image) throws IOException {
+        String id = photoService.addPhoto(image.getOriginalFilename(),image);
         return  id;
     }
 
-    @GetMapping
-    public ResponseEntity<Resource> downloadPhoto(@RequestParam String userid) {
-        Photo photo = photoServiceImpl.getPhoto(userid);
+    @GetMapping("/{id}")
+    public ResponseEntity<Resource> downloadPhoto(@PathVariable String id) {
+        Photo photo = photoService.getPhoto(id);
         Resource resource
                 = new ByteArrayResource(photo.getPhoto().getData());
 
         return  ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, photo.getId())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + photo.getTitle() + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
 
     @PostMapping("/edit")
-    public String updatePhoto(@RequestParam("image") MultipartFile image,@RequestParam String userid) throws IOException {
-        photoServiceImpl.deletePhoto(userid);
-        String pid = photoServiceImpl.addPhoto(image.getOriginalFilename(),image,userid);
+    public String updatePhoto(@RequestParam("image") MultipartFile image, @RequestParam String id) throws IOException {
+        String pid = photoService.addPhoto(image.getOriginalFilename(),image);
+        photoService.deletePhoto(id);
         return pid;
     }
 }

@@ -18,7 +18,6 @@ public class Photo {
 
     @Id
     private String id;
-    private String userid;
     private String title;
     private Binary photo;
 }
