@@ -4,15 +4,7 @@
 <span contenteditable="false">Hub</span>
 </div>
 </template>
-<script>
-  export default{
-    data(){
-      return{
-       
-      }
-    }
-  }
-</script>
+
 <style >
  .hub {
   display: inline;

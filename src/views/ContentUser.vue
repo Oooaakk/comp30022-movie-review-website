@@ -10,7 +10,7 @@
           title="Notice"
           :width="200"
           trigger="hover"
-          content="after login you can post review, like review, see your own past reviews and much more!"
+          content="after login you can post review, like review, see your own past reviews, post your avatar and much more!"
         >
           <template #reference>
             <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
@@ -19,18 +19,6 @@
       </div>
       <div v-else>
         <AvatarIcon :routeID="routeid"/>
-        <div class="personalnfo">
-        <div class="usernamer"> <div>
-          
-          {{this.usernamerender}}  age:{{this.agerender}}</div>
-          <div v-if="this.genederrender==='MALE'">
-          <img class="maleimg" src="../assets/3233508.png"/></div>
-        <div v-else-if="this.genederrender==='FEMALE'">
-          <img class="femaleimg" src="../assets/3233515.png"/>
-        </div></div>
-
-  
-      </div>
       </div>
         </el-header>
         <el-main class="main">
@@ -359,13 +347,6 @@
   }
   </script>
   <style scoped>
-.demo-type {
-  display: flex;
-}
-.demo-type > div {
-  flex: 1;
-  text-align: center;
-}
 .text {
   font-size: 14px;
 }
@@ -378,19 +359,21 @@
 .item {
   padding: 18px 0;
 }
-/* .box-card {
-  width: 480px;
-} */
-.demo-type > div:not(:last-child) {
-  border-right: 1px solid var(--el-border-color);
-}
+
 .header{
   background-color: black;
 }
 .beforelike{
-  width:3%;
-  height:3%;
-  cursor:pointer
+  width:5%;
+  height:5%;
+  cursor:pointer;
+  -webkit-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 0 6px white;
+  box-shadow: 0 0 6px white;
+  -webkit-transition: all .5s ease-out;
+  transition: all .5s ease-out;
 }
 .LRbutton{
   position:relative;
@@ -449,24 +432,7 @@ height: 550px;
   word-wrap: break-word;
   overflow:hidden;
 }
-.personalnfo{
-    color:orange
-  }
-  .maleimg{
-    position:relative;
-    left:-90px;
-    top:-20px;
-    width:10%;
-    height:10%;
-
-  }
-  .femaleimg{
-    position:relative;
-    left:-90px;
-    top:-20px;
-    width:10%;
-    height:10%;
-  }
+ 
   .beforelike :hover{
   box-shadow: 1px 1px 1px black;
 }
@@ -481,4 +447,6 @@ height: 550px;
     margin-left:50px;
     margin-bottom: 20px;
   } */
+
+
 </style>

@@ -4,15 +4,7 @@
   <div class="common-layout">
       <el-container>
         <el-header class="header" >
-          <div class="personalnfo"> 
-        <div>{{this.usernamerender}}  age:{{this.agerender}}
-          <div class="genderposition" v-if="this.genederrender==='MALE'">
-          <img class="maleimg" src="../assets/3233508.png"/></div>
-        <div class="genderposition" v-else-if="this.genederrender==='FEMALE'">
-          <img class="femaleimg" src="../assets/3233515.png"/>
-        </div>
-        </div>
-        </div>
+ 
           <AvatarIcon/>
         
         </el-header>
@@ -320,31 +312,15 @@ body {
   margin-bottom:15px;
   color:orange
 }
-.personalnfo{
-    color:orange;
-    position: relative;
-    top:15px;
-    margin-top: -10px;
-    left: 470px;
-  }
+
   .genderposition{
     left: 500px;
     
   }
-  .maleimg{
-
-    width:2%;
-    height:1%;
-
-  }
-  .femaleimg{
-    
-    width:2%;
-    height:1%
-  }
+ 
   .beforelike{
-  width:3%;
-  height:3%;
+  width:5%;
+  height:5%;
 
 }
 </style>

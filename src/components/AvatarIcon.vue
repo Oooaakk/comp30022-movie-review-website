@@ -5,6 +5,15 @@
     content=""
     
   >
+  <div class="personalnfo"> 
+    <div>{{this.usernamerender}}  age:{{this.agerender}}
+      <div  v-if="this.genederrender==='MALE'">
+      <img class="maleimg" src="../assets/3233508.png"/></div>
+    <div v-else-if="this.genederrender==='FEMALE'">
+      <img class="femaleimg" src="../assets/3233515.png"/>
+    </div>
+    </div>
+  </div>
   <el-button @click="dialogVisible = true" class="cpass">
       <el-icon class="setting"><Lock /></el-icon>Change password</el-button>
 
@@ -361,13 +370,21 @@ export default{
 <style>
 
   .avatar1{
-  position:fixed;
+  position:absolute;
   top:10px;
-  left:1210px
+  left:96%
 }
 .avatar1:hover{
   cursor:pointer;
+  -webkit-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 0 6px #999;
+  box-shadow: 0 0 6px #999;
+  -webkit-transition: all .5s ease-out;
+  transition: all .5s ease-out;
 }
+
 .setting{
     margin-top:10px
 }
@@ -390,4 +407,25 @@ export default{
 .logoutbutton{
   margin-top: 10px;
 }
+.personalnfo{
+    color:orange;
+    position:relative;
+    left:50px;
+
+  }
+
+  .maleimg{
+
+    width:16%;
+    height:16%;
+    position:relative;
+    left:22px;
+
+  }
+  .femaleimg{
+    width:16%;
+    height:16%;
+    position:relative;
+    left:22px;
+  }
 </style>

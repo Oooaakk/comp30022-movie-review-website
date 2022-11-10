@@ -5,6 +5,7 @@
       <el-header class="header">
         <div class="seaerchthreegroup">
             <el-autocomplete 
+ 
               placeholder="search your movie here!" 
               popper-class="my-autocomplete" 
               class="input-with-select" 
@@ -22,7 +23,7 @@
           title="Notice"
           :width="200"
           trigger="hover"
-          content="after login you can post review, like review, see your own past reviews and much more!"
+          content="after login you can post review, like review, see your own past reviews, post your avatar and much more!"
         >
           <template #reference>
             <el-button type="warning" round class="LRbutton" @click="$router.push('/moviehub/loginpage')">Login/Register</el-button> 
@@ -32,16 +33,6 @@
       </div>
       <div v-else>
         <AvatarIcon :routeID="routeuserID"/>
-        
-      <div class="personalnfo"> 
-        <div>{{this.usernamerender}}  age:{{this.agerender}}
-          <div class="genderposition" v-if="this.genederrender==='MALE'">
-          <img class="maleimg" src="../assets/3233508.png"/></div>
-        <div class="genderposition" v-else-if="this.genederrender==='FEMALE'">
-          <img class="femaleimg" src="../assets/3233515.png"/>
-        </div>
-        </div>
-      </div>
         
       </div>
 
@@ -250,7 +241,6 @@
             movielist : [],
             movieplot:[],
             inputText: "",
-            
             poster: "",
             rating: "",
             title: "",
@@ -351,12 +341,9 @@
               type: "error",
               message: "fail to get due to unexpected reason"
              })
-          }
-          
-        })
-
+          } })
             }
-      },
+          },
           getuserinfo(){
               request.get("/user/info/userId="+this.routeuserID).then(res=>{
               if (res.status===200){
@@ -365,6 +352,7 @@
                   this.genederrender=res.data.body.gender
               }
               })
+              
               console.log(this.genederrender)
           },
           searchrelmovie(){
@@ -576,7 +564,7 @@
   }
   .searchbar{
     margin-left: 100px;
-    width:20%;
+    width:30%;
     margin-top: 17px;
   }
   .searchbut{
@@ -646,29 +634,7 @@
     left:150px;
   }
   
-  .personalnfo{
-    color:orange;
-    position: relative;
-    bottom:10px;
-    margin-top: -10px;
-    left: 470px;
-  }
-  .genderposition{
-    position:relative;
-    left:-90px;
-    top:-20px
-  }
-  .maleimg{
-
-    width:2%;
-    height:1%;
-
-  }
-  .femaleimg{
-    
-    width:2%;
-    height:1%
-  }
+ 
   .nowplayingtext{
     color:orange;
     left:-360px;
@@ -681,7 +647,9 @@
     height:330px
   }
   .nowplayingcarousel{
-    width:40%
+    width:40%;
+    position:relative;
+    left:5%
   }
   .ourrankcard{
     width:30%;
